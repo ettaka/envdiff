@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+import argparse
+
+file1 = "env_org"
+file2 = "env_OF"
+
+def read_env(filename, delimiter=':'):
+    """
+    return {'var1' : ['value_11',...,'value_1n']
+            ...
+            'varm' : ['value_m1',...,'value_mk'],
+            }
+    """
+    f = open(filename,"r")
+    out = dict((line.split("=")[0],line.split("=")[1].replace('\n','')) for line in f.readlines())
+    for key in out:
+        out[key] = set(out[key].split(delimiter))
+    return out
+
+def get_env_key_diffs(env1, env2):
+    """
+    return (intersection, pure_env1, pure_env2)
+
+    """
+    env1keys = set(env1.keys())
+    env2keys = set(env2.keys())
+    intersection = env1keys.intersection(env2keys)
+    return intersection, env1keys-intersection, env2keys-intersection
+
+def get_separated_env(env1, env2):
+    env_intersection, pure_env1, pure_env2 = get_env_key_diffs(env1, env2)
+    separated_env = {}
+    for var in env_intersection:
+        separated_env[var] = {}
+        var_intersection = env1[var].intersection(env2[var])
+        separated_env[var]['intersection'] = var_intersection
+        separated_env[var]['1'] = env1[var] - var_intersection
+        separated_env[var]['2'] = env2[var] - var_intersection
+
+    for var in pure_env1:
+        separated_env[var] = {}
+        separated_env[var]['intersection'] = set([])
+        separated_env[var]['1'] = env1[var]
+        separated_env[var]['2'] = set([])
+        
+    for var in pure_env2:
+        separated_env[var] = {}
+        separated_env[var]['intersection'] = set([])
+        separated_env[var]['2'] = env2[var]
+        separated_env[var]['1'] = set([])
+     
+    return separated_env
+
+def empty_set(test_set): 
+    return (test_set == set(['']) or test_set == set([])) 
+
+parser = argparse.ArgumentParser(description='Output the difference of two shell environments in modules syntax')
+ 
+parser.add_argument('-1', '--env1', type=str, help='file containing the environment 1 (use "env" command)')
+parser.add_argument('-2', '--env2', type=str, help='file containing the environment 2 (use "env" command)')
+
+args = parser.parse_args()
+
+env1 = read_env(args.env1)
+env2 = read_env(args.env2)
+separated_env = get_separated_env(env1, env2)
+
+for var in separated_env:
+    if not empty_set(separated_env[var]['2']):
+        if empty_set(separated_env[var]['intersection']): 
+            module_string = "setenv"
+        else:
+            module_string = "prepend-path"
+
+        for value in separated_env[var]['2']:
+            print module_string, "\t", var, "\t", value
+
+
+
+        
