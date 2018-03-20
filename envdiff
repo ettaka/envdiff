@@ -56,13 +56,13 @@ def empty_set(test_set):
 
 parser = argparse.ArgumentParser(description='Output the difference of two shell environments in modules syntax')
  
-parser.add_argument('-1', '--env1', required=True, type=str, help='file containing the environment 1 (use "env" command)')
-parser.add_argument('-2', '--env2', required=True, type=str, help='file containing the environment 2 (use "env" command)')
+parser.add_argument('env_files', nargs=2, type=str, help='Two files containing the original and changed environments (use "env > file1; [change environment here]; env > file2; envdiff file1 file2")')
 
 args = parser.parse_args()
 
-env1 = read_env(args.env1)
-env2 = read_env(args.env2)
+env1 = read_env(args.env_files[0])
+env2 = read_env(args.env_files[1])
+
 separated_env = get_separated_env(env1, env2)
 
 for var in separated_env:
