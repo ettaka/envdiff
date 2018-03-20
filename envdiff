@@ -73,7 +73,7 @@ for var in separated_env:
             module_string = "prepend-path"
 
         for i,value in enumerate(separated_env[var]['2']):
-            if i>0: module_string = prepend-path
+            if i>0: module_string = "prepend-path"
             print module_string, "\t", var, "\t", value
 
 
